@@ -8,98 +8,55 @@ Protecția cu autorizare: Asigură că doar utilizatorii autentificați pot acce
 
 Gestionarea răspunsurilor HTTP: Returnează răspunsuri HTTP corespunzatoare ppentru indica rezultatul fiecărei operațiuni (înregistrare, autentificare) către client.
 */
-
-using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using YourBackendProject.Models;
+using System.Threading.Tasks;
+using TeamFinder.Models;
+using TeamFinder.Services;
 
-namespace YourBackendProject.Controllers
+namespace TeamFinder.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly IConfiguration _configuration;
+        private readonly IAuthService _authService;
 
-        public AuthController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IConfiguration configuration)
+        public AuthController(IAuthService authService)
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
-            _configuration = configuration;
+            _authService = authService;
         }
 
-        /// <summary>
-        /// Endpoint pentru înregistrarea unui utilizator.
-        /// </summary>
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterModel model)
+        public async Task<IActionResult> Register([FromBody] UserRegisterModel model)
         {
-            // Validare model și creare obiect IdentityUser
-            var user = new IdentityUser { UserName = model.Email, Email = model.Email };
-            var result = await _userManager.CreateAsync(user, model.Password);
+            var result = await _authService.RegisterAsync(model);
 
-            if (result.Succeeded)
+            if (!result.Success)
             {
-                // Utilizator înregistrat cu succes, generare token JWT
-                var token = GenerateJwtToken(user);
-                return Ok(new { Token = token });
+                return BadRequest(result.Message);
             }
 
-            return BadRequest(new { Message = "Registration failed", Errors = result.Errors });
+            return Ok(result.Data);
         }
 
-        /// <summary>
-        /// Endpoint pentru autentificarea unui utilizator.
-        /// </summary>
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginModel model)
+        public async Task<IActionResult> Login([FromBody] UserLoginModel model)
         {
-            // Autentificare utilizator
-            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, lockoutOnFailure: false);
+            var result = await _authService.LoginAsync(model);
 
-            if (result.Succeeded)
+            if (!result.Success)
             {
-                // Utilizator autentificat cu succes, generare token JWT
-                var user = await _userManager.FindByEmailAsync(model.Email);
-                var token = GenerateJwtToken(user);
-                return Ok(new { Token = token });
+                return Unauthorized();
             }
 
-            return Unauthorized(new { Message = "Invalid credentials" });
+            return Ok(result.Data);
         }
 
-        // Metoda pentru generarea token-ului JWT
-        private string GenerateJwtToken(IdentityUser user)
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
         {
-            var claims = new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expires = DateTime.Now.AddDays(Convert.ToDouble(_configuration["Jwt:ExpireDays"]));
-
-            var token = new JwtSecurityToken(
-                _configuration["Jwt:Issuer"],
-                _configuration["Jwt:Issuer"],
-                claims,
-                expires: expires,
-                signingCredentials: creds
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            await _authService.LogoutAsync();
+            return Ok("Logged out successfully");
         }
     }
 }
