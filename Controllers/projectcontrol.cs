@@ -1,96 +1,74 @@
-using System;
-using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using YourBackendProject.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using TeamFinder.Models;
+using TeamFinder.Services;
 
-namespace YourBackendProject.Controllers
+namespace TeamFinder.Controllers
 {
-    public class ProjectController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ProjectController : ControllerBase
     {
-        private readonly YourDbContext _context;
+        private readonly IProjectService _projectService;
 
-        // Constructor pentru injectarea dependențelor
-        public ProjectController(YourDbContext context)
+        public ProjectController(IProjectService projectService)
         {
-            _context = context;
+            _projectService = projectService;
         }
 
-        // Acțiunea pentru afișarea tuturor proiectelor
-        public IActionResult Index()
+        [HttpGet]
+        public async Task<IActionResult> GetProjects()
         {
-            var projects = _context.Projects.ToList();
-            return View(projects);
+            var projects = await _projectService.GetProjectsAsync();
+            return Ok(projects);
         }
 
-        // Acțiunea pentru afișarea detaliilor unui proiect
-        public IActionResult Details(int? id)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetProjectById(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var project = _context.Projects.FirstOrDefault(p => p.ProjectId == id);
+            var project = await _projectService.GetProjectByIdAsync(id);
             if (project == null)
             {
                 return NotFound();
             }
-
-            return View(project);
+            return Ok(project);
         }
 
-        // Acțiunea pentru crearea unui nou proiect
         [HttpPost]
-        public IActionResult Create(Project project)
+        public async Task<IActionResult> CreateProject([FromBody] Project project)
         {
-            if (ModelState.IsValid)
+            var createdProject = await _projectService.CreateProjectAsync(project);
+            return CreatedAtAction(nameof(GetProjectById), new { id = createdProject.Id }, createdProject);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateProject(int id, [FromBody] Project project)
+        {
+            if (id != project.Id)
             {
-                project.CreatedAt = DateTime.UtcNow;
-                _context.Projects.Add(project);
-                _context.SaveChanges();
-                return RedirectToAction(nameof(Index));
+                return BadRequest();
             }
-            return View(project);
-        }
 
-        // Acțiunea pentru editarea unui proiect existent
-        [HttpPost]
-        public IActionResult Edit(int id, Project project)
-        {
-            if (id != project.ProjectId)
+            var updatedProject = await _projectService.UpdateProjectAsync(project);
+            if (updatedProject == null)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(project);
-                    _context.SaveChanges();
-                }
-                catch
-                {
-                    return NotFound();
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(project);
+            return Ok(updatedProject);
         }
 
-        // Acțiunea pentru ștergerea unui proiect
-        [HttpPost]
-        public IActionResult Delete(int id)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProject(int id)
         {
-            var project = _context.Projects.FirstOrDefault(p => p.ProjectId == id);
-            if (project == null)
+            var deletedProject = await _projectService.DeleteProjectAsync(id);
+            if (deletedProject == null)
             {
                 return NotFound();
             }
 
-            _context.Projects.Remove(project);
-            _context.SaveChanges();
-            return RedirectToAction(nameof(Index));
+            return Ok(deletedProject);
         }
     }
 }
