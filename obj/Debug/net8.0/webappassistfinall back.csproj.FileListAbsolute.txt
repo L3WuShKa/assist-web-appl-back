@@ -1,0 +1,15 @@
+C:\webappassistfinall back\bin\Debug\net8.0\webappassistfinall back.exe
+C:\webappassistfinall back\bin\Debug\net8.0\webappassistfinall back.deps.json
+C:\webappassistfinall back\bin\Debug\net8.0\webappassistfinall back.runtimeconfig.json
+C:\webappassistfinall back\bin\Debug\net8.0\webappassistfinall back.dll
+C:\webappassistfinall back\bin\Debug\net8.0\webappassistfinall back.pdb
+C:\webappassistfinall back\obj\Debug\net8.0\webappassistfinall back.GeneratedMSBuildEditorConfig.editorconfig
+C:\webappassistfinall back\obj\Debug\net8.0\webappassistfinall back.AssemblyInfoInputs.cache
+C:\webappassistfinall back\obj\Debug\net8.0\webappassistfinall back.AssemblyInfo.cs
+C:\webappassistfinall back\obj\Debug\net8.0\webappassistfinall back.csproj.CoreCompileInputs.cache
+C:\webappassistfinall back\obj\Debug\net8.0\webappassistfinall back.sourcelink.json
+C:\webappassistfinall back\obj\Debug\net8.0\webappassistfinall back.dll
+C:\webappassistfinall back\obj\Debug\net8.0\refint\webappassistfinall back.dll
+C:\webappassistfinall back\obj\Debug\net8.0\webappassistfinall back.pdb
+C:\webappassistfinall back\obj\Debug\net8.0\webappassistfinall back.genruntimeconfig.cache
+C:\webappassistfinall back\obj\Debug\net8.0\ref\webappassistfinall back.dll
