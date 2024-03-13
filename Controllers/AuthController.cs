@@ -1,4 +1,14 @@
 // AuthController.cs
+
+/* Autentificarea și înregistrarea utilizatorilor: Furnizează endpoint-uri pentru înregistrare și autentificare, verificând și procesând datele furnizate de utilizatori.
+
+Generarea și returnarea token-urilor JWT: Generează token-uri de autentificare JWT pentru utilizatorii validați și le returnează către client pentru autentificare ulterioară.
+
+Protecția cu autorizare: Asigură că doar utilizatorii autentificați pot accesa resursele protejate, adăugând atributul [Authorize] la endpoint-urile corespunzătoare.
+
+Gestionarea răspunsurilor HTTP: Returnează răspunsuri HTTP corespunzatoare ppentru indica rezultatul fiecărei operațiuni (înregistrare, autentificare) către client.
+*/
+
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
