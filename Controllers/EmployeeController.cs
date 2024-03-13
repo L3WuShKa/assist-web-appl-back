@@ -1,94 +1,74 @@
-// EmployeeController.cs
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using YourBackendProject.Models;
-using YourBackendProject.Services;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TeamFinder.Models;
+using TeamFinder.Services;
 
-namespace YourBackendProject.Controllers
+namespace TeamFinder.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Asigură că doar utilizatorii autentificați pot accesa acest controller
+    [ApiController]
     public class EmployeeController : ControllerBase
     {
-        private readonly CosmosDbContext _cosmosDbContext;
+        private readonly IEmployeeService _employeeService;
 
-        public EmployeeController(CosmosDbContext cosmosDbContext)
+        public EmployeeController(IEmployeeService employeeService)
         {
-            _cosmosDbContext = cosmosDbContext;
+            _employeeService = employeeService;
         }
 
-        /// <summary>
-        /// Endpoint pentru obținerea listei de angajați.
-        /// </summary>
-        [HttpGet("list")]
-        public ActionResult<IEnumerable<Employee>> GetEmployees()
+        [HttpGet]
+        public async Task<IActionResult> GetEmployees()
         {
-            var employees = _cosmosDbContext.GetEmployees();
+            var employees = await _employeeService.GetEmployeesAsync();
             return Ok(employees);
         }
 
-        /// <summary>
-        /// Endpoint pentru obținerea unui angajat după ID.
-        /// </summary>
         [HttpGet("{id}")]
-        public ActionResult<Employee> GetEmployeeById(int id)
+        public async Task<IActionResult> GetEmployeeById(int id)
         {
-            var employee = _cosmosDbContext.GetEmployeeById(id);
-
+            var employee = await _employeeService.GetEmployeeByIdAsync(id);
             if (employee == null)
             {
-                return NotFound(new { Message = $"Employee with ID {id} not found" });
+                return NotFound();
             }
-
             return Ok(employee);
         }
 
-        /// <summary>
-        /// Endpoint pentru adăugarea unui nou angajat.
-        /// </summary>
-        [HttpPost("add")]
-        public ActionResult AddEmployee([FromBody] Employee employee)
+        [HttpPost]
+        public async Task<IActionResult> CreateEmployee([FromBody] Employee employee)
         {
-            _cosmosDbContext.AddEmployee(employee);
-            return Ok(new { Message = "Employee added successfully" });
+            var createdEmployee = await _employeeService.CreateEmployeeAsync(employee);
+            return CreatedAtAction(nameof(GetEmployeeById), new { id = createdEmployee.Id }, createdEmployee);
         }
 
-        /// <summary>
-        /// Endpoint pentru actualizarea datelor unui angajat existent.
-        /// </summary>
-        [HttpPut("update/{id}")]
-        public ActionResult UpdateEmployee(int id, [FromBody] Employee updatedEmployee)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateEmployee(int id, [FromBody] Employee employee)
         {
-            var existingEmployee = _cosmosDbContext.GetEmployeeById(id);
-
-            if (existingEmployee == null)
+            if (id != employee.Id)
             {
-                return NotFound(new { Message = $"Employee with ID {id} not found" });
+                return BadRequest();
             }
 
-            _cosmosDbContext.UpdateEmployee(id, updatedEmployee);
-            return Ok(new { Message = $"Employee with ID {id} updated successfully" });
+            var updatedEmployee = await _employeeService.UpdateEmployeeAsync(employee);
+            if (updatedEmployee == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(updatedEmployee);
         }
 
-        /// <summary>
-        /// Endpoint pentru ștergerea unui angajat după ID.
-        /// </summary>
-        [HttpDelete("delete/{id}")]
-        public ActionResult DeleteEmployee(int id)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteEmployee(int id)
         {
-            var existingEmployee = _cosmosDbContext.GetEmployeeById(id);
-
-            if (existingEmployee == null)
+            var deletedEmployee = await _employeeService.DeleteEmployeeAsync(id);
+            if (deletedEmployee == null)
             {
-                return NotFound(new { Message = $"Employee with ID {id} not found" });
+                return NotFound();
             }
 
-            _cosmosDbContext.DeleteEmployee(id);
-            return Ok(new { Message = $"Employee with ID {id} deleted successfully" });
+            return Ok(deletedEmployee);
         }
     }
 }
