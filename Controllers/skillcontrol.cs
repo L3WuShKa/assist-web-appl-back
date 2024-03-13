@@ -1,87 +1,79 @@
-using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using YourBackendProject.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using TeamFinder.Models;
+using TeamFinder.Services;
 
-namespace YourBackendProject.Controllers
+namespace TeamFinder.Controllers
 {
-    public class SkillController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    public class SkillController : ControllerBase
     {
-        private readonly YourDbContext _context;
+        private readonly ISkillService _skillService;
 
-        // Constructor pentru injectarea dependențelor
-        public SkillController(YourDbContext context)
+        public SkillController(ISkillService skillService)
         {
-            _context = context;
+            _skillService = skillService;
         }
 
-        // Acțiunea pentru afișarea tuturor abilităților
-        public IActionResult Index()
+        // Endpoint pentru obținerea tuturor abilităților
+        [HttpGet]
+        public async Task<IActionResult> GetSkills()
         {
-            var skills = _context.Skills.ToList();
-            return View(skills);
+            var skills = await _skillService.GetSkillsAsync();
+            return Ok(skills);
         }
 
-        // Acțiunea pentru afișarea detaliilor unei abilități
-        public IActionResult Details(int? id)
+        // Endpoint pentru obținerea unei abilități după ID
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetSkillById(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var skill = _context.Skills.FirstOrDefault(s => s.SkillId == id);
+            var skill = await _skillService.GetSkillByIdAsync(id);
             if (skill == null)
             {
                 return NotFound();
             }
-
-            return View(skill);
+            return Ok(skill);
         }
 
-        // Acțiunea pentru crearea unei noi abilități
+        // Endpoint pentru crearea unei noi abilități
         [HttpPost]
-        public IActionResult Create(Skill skill)
+        public async Task<IActionResult> CreateSkill([FromBody] Skill skill)
         {
-            if (ModelState.IsValid)
-            {
-                _context.Skills.Add(skill);
-                _context.SaveChanges();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(skill);
+            var createdSkill = await _skillService.CreateSkillAsync(skill);
+            return CreatedAtAction(nameof(GetSkillById), new { id = createdSkill.Id }, createdSkill);
         }
 
-        // Acțiunea pentru editarea unei abilități existente
-        [HttpPost]
-        public IActionResult Edit(int id, Skill skill)
+        // Endpoint pentru actualizarea unei abilități existente
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateSkill(int id, [FromBody] Skill skill)
         {
-            if (id != skill.SkillId)
+            if (id != skill.Id)
             {
-                return NotFound();
+                return BadRequest("ID-ul abilității nu corespunde.");
             }
 
-            if (ModelState.IsValid)
+            var updatedSkill = await _skillService.UpdateSkillAsync(skill);
+            if (updatedSkill == null)
             {
-                _context.Update(skill);
-                _context.SaveChanges();
-                return RedirectToAction(nameof(Index));
+                return NotFound("Abilitatea nu a fost găsită.");
             }
-            return View(skill);
+
+            return Ok(updatedSkill);
         }
 
-        // Acțiunea pentru ștergerea unei abilități
-        [HttpPost]
-        public IActionResult Delete(int id)
+        // Endpoint pentru ștergerea unei abilități existente
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteSkill(int id)
         {
-            var skill = _context.Skills.FirstOrDefault(s => s.SkillId == id);
-            if (skill == null)
+            var deletedSkill = await _skillService.DeleteSkillAsync(id);
+            if (deletedSkill == null)
             {
-                return NotFound();
+                return NotFound("Abilitatea nu a fost găsită.");
             }
 
-            _context.Skills.Remove(skill);
-            _context.SaveChanges();
-            return RedirectToAction(nameof(Index));
+            return Ok(deletedSkill);
         }
     }
 }
