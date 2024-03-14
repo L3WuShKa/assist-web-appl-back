@@ -1,62 +1,124 @@
 using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using TeamFinder.Models;
+using System.Collections.Generic;
 
-namespace TeamFinder.Services
+namespace YourNamespace.Services
 {
-    public class AuthService : IAuthService
+    public class AuthService
     {
-        private readonly IConfiguration _config;
-        private readonly UserManager<User> _userManager;
+        private Dictionary<string, User> users = new Dictionary<string, User>();
 
-        public AuthService(IConfiguration config, UserManager<User> userManager)
+        public AuthService()
         {
-            _config = config;
-            _userManager = userManager;
+            // Constructor
         }
 
-        public async Task<string> AuthenticateAsync(string email, string password)
+        // Metoda pentru inregistrarea unui nou administrator de organizatie
+        public void SignUpOrganizationAdmin(string name, string email, string password, string organizationName, string headquarterAddress)
         {
-            var user = await _userManager.FindByEmailAsync(email);
-
-            if (user == null || !await _userManager.CheckPasswordAsync(user, password))
+            // Verifica daca email-ul este deja folosit pentru un alt cont
+            if (users.ContainsKey(email))
             {
-                return null;
+                throw new Exception("Email already registered.");
             }
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_config["Jwt:Secret"]);
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.Name, user.Id),
-                    // Poți adăuga alte claim-uri aici, cum ar fi rolurile utilizatorului.
-                }),
-                Expires = DateTime.UtcNow.AddDays(7),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            // Creeaza un nou administrator de organizatie
+            OrganizationAdmin newAdmin = new OrganizationAdmin(name, email, password, organizationName, headquarterAddress);
+
+            // Adauga utilizatorul in dictionarul de utilizatori
+            users.Add(email, newAdmin);
         }
 
-        public async Task<string> RegisterAsync(string email, string password)
+        // Metoda pentru generarea URL-ului de inregistrare pentru angajati
+        public string GenerateEmployeeSignUpUrl(string adminEmail)
         {
-            var user = new User { UserName = email, Email = email };
-            var result = await _userManager.CreateAsync(user, password);
-
-            if (result.Succeeded)
+            // Verifica daca exista un administrator de organizatie cu acest email
+            if (!users.ContainsKey(adminEmail) || !(users[adminEmail] is OrganizationAdmin))
             {
-                return await AuthenticateAsync(email, password);
+                throw new Exception("Invalid organization administrator email.");
             }
 
-            return null;
+            // Genereaza URL-ul de inregistrare pentru angajati
+            return "https://yourwebsite.com/signup?admin=" + adminEmail;
+        }
+
+        // Metoda pentru inregistrarea unui nou angajat
+        public void SignUpEmployee(string name, string email, string password, string signUpUrl)
+        {
+            // Verifica daca URL-ul de inregistrare este valid
+            // Aici ar trebui sa fie logica pentru validarea URL-ului, poate folosind un token sau un alt mecanism de securitate
+            // Daca URL-ul nu este valid, ar trebui aruncata o exceptie
+
+            // Creeaza un nou angajat
+            Employee newEmployee = new Employee(name, email, password);
+
+            // Adauga utilizatorul in dictionarul de utilizatori
+            users.Add(email, newEmployee);
+        }
+
+        // Metoda pentru autentificarea utilizatorului
+        public bool AuthenticateUser(string email, string password)
+        {
+            // Verifica daca exista un utilizator cu acest email
+            if (!users.ContainsKey(email))
+            {
+                return false;
+            }
+
+            // Verifica parola utilizatorului
+            return users[email].Password == password;
+        }
+
+        // Metoda pentru obtinerea rolului unui utilizator
+        public string GetUserRole(string email)
+        {
+            // Verifica daca exista un utilizator cu acest email
+            if (!users.ContainsKey(email))
+            {
+                throw new Exception("User not found.");
+            }
+
+            // Returneaza rolul utilizatorului
+            return users[email].Role;
+        }
+
+        // Clasa de baza pentru utilizatori
+        public abstract class User
+        {
+            public string Name { get; }
+            public string Email { get; }
+            public string Password { get; }
+            public string Role { get; }
+
+            public User(string name, string email, string password, string role)
+            {
+                Name = name;
+                Email = email;
+                Password = password;
+                Role = role;
+            }
+        }
+
+        // Clasa pentru administratorii de organizatie
+        public class OrganizationAdmin : User
+        {
+            public string OrganizationName { get; }
+            public string HeadquarterAddress { get; }
+
+            public OrganizationAdmin(string name, string email, string password, string organizationName, string headquarterAddress)
+                : base(name, email, password, "OrganizationAdmin")
+            {
+                OrganizationName = organizationName;
+                HeadquarterAddress = headquarterAddress;
+            }
+        }
+
+        // Clasa pentru angajati
+        public class Employee : User
+        {
+            public Employee(string name, string email, string password)
+                : base(name, email, password, "Employee")
+            {
+            }
         }
     }
 }
