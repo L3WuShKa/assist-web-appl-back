@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("webappassistfinall back")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c700a1b5b527e073a33c593cd711120e468ac87b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d643b75ba53cd1a914d9383e6e0a81f656a09f50")]
 [assembly: System.Reflection.AssemblyProductAttribute("webappassistfinall back")]
 [assembly: System.Reflection.AssemblyTitleAttribute("webappassistfinall back")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
