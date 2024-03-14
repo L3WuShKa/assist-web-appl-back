@@ -1,62 +1,40 @@
-// AuthController.cs
-
-/* Autentificarea și înregistrarea utilizatorilor: Furnizează endpoint-uri pentru înregistrare și autentificare, verificând și procesând datele furnizate de utilizatori.
-
-Generarea și returnarea token-urilor JWT: Generează token-uri de autentificare JWT pentru utilizatorii validați și le returnează către client pentru autentificare ulterioară.
-
-Protecția cu autorizare: Asigură că doar utilizatorii autentificați pot accesa resursele protejate, adăugând atributul [Authorize] la endpoint-urile corespunzătoare.
-
-Gestionarea răspunsurilor HTTP: Returnează răspunsuri HTTP corespunzatoare ppentru indica rezultatul fiecărei operațiuni (înregistrare, autentificare) către client.
-*/
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using TeamFinder.Models;
-using TeamFinder.Services;
 
-namespace TeamFinder.Controllers
+namespace YourNamespace.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/auth")]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthService _authService;
+        private readonly AuthService _authService;
 
-        public AuthController(IAuthService authService)
+        public AuthController(AuthService authService)
         {
             _authService = authService;
         }
 
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserRegisterModel model)
+        // POST: api/auth/signup/organizationadmin
+        [HttpPost("signup/organizationadmin")]
+        public IActionResult SignUpOrganizationAdmin([FromBody] OrganizationAdminSignUpRequest request)
         {
-            var result = await _authService.RegisterAsync(model);
-
-            if (!result.Success)
-            {
-                return BadRequest(result.Message);
-            }
-
-            return Ok(result.Data);
+            _authService.SignUpOrganizationAdmin(request);
+            return Ok("Organization admin account created successfully.");
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] UserLoginModel model)
+        // GET: api/auth/signup/employee/url
+        [HttpGet("signup/employee/url")]
+        public IActionResult GetEmployeeSignUpURL(string organizationName)
         {
-            var result = await _authService.LoginAsync(model);
-
-            if (!result.Success)
-            {
-                return Unauthorized();
-            }
-
-            return Ok(result.Data);
+            string signUpURL = _authService.GenerateEmployeeSignUpURL(organizationName);
+            return Ok(new { SignUpURL = signUpURL });
         }
 
-        [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
+        // POST: api/auth/signup/employee
+        [HttpPost("signup/employee")]
+        public IActionResult SignUpEmployee([FromBody] EmployeeSignUpRequest request)
         {
-            await _authService.LogoutAsync();
-            return Ok("Logged out successfully");
+            _authService.SignUpEmployee(request);
+            return Ok("Employee account created successfully.");
         }
     }
 }
