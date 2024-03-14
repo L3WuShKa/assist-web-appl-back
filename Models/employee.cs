@@ -1,54 +1,52 @@
 using System;
 using System.Collections.Generic;
 
-namespace TeamFinder.Models
+namespace YourNamespace.Models
 {
     public class Employee
     {
-        public int Id { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
+        public string Name { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
-        public DateTime DateOfBirth { get; set; }
-        public string Address { get; set; }
-        public string PhoneNumber { get; set; }
-        public bool IsAdmin { get; set; }
-        public List<Skill> Skills { get; set; }
-        public List<ProjectProposal> ProjectProposals { get; set; }
-        public List<Project> AssignedProjects { get; set; }
+        public List<string> Skills { get; set; }
+        public List<Project> Projects { get; set; }
+        public List<string> Notifications { get; set; }
+        public Role Role { get; set; }
+        public Department Department { get; set; }
 
-        // Constructor
-        public Employee()
+        public Employee(string name, string email, string password, Role role, Department department)
         {
-            Skills = new List<Skill>();
-            ProjectProposals = new List<ProjectProposal>();
-            AssignedProjects = new List<Project>();
+            Name = name;
+            Email = email;
+            Password = password;
+            Skills = new List<string>();
+            Projects = new List<Project>();
+            Notifications = new List<string>();
+            Role = role;
+            Department = department;
         }
 
-        // Metodă pentru adăugarea unei abilități
-        public void AddSkill(Skill skill)
+        public void UpdateSkills(List<string> newSkills)
         {
-            Skills.Add(skill);
+            Skills.AddRange(newSkills);
         }
 
-        // Metodă pentru adăugarea unei propuneri de proiect
-        public void AddProjectProposal(ProjectProposal proposal)
+        public void ReceiveNotification(string notification)
         {
-            ProjectProposals.Add(proposal);
+            Notifications.Add(notification);
         }
 
-        // Metodă pentru acceptarea unei propuneri de proiect
-        public void AcceptProjectProposal(ProjectProposal proposal)
+        public void AssignToProject(Project project)
         {
-            ProjectProposals.Remove(proposal);
-            AssignedProjects.Add(proposal.Project);
+            Projects.Add(project);
+            project.AddMember(this);
         }
 
-        // Metodă pentru respingerea unei propuneri de proiect
-        public void RejectProjectProposal(ProjectProposal proposal)
+        public void RemoveFromProject(Project project)
         {
-            ProjectProposals.Remove(proposal);
+            Projects.Remove(project);
+            project.RemoveMember(this);
         }
+//ok
     }
 }
